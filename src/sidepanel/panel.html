@@ -6,29 +6,58 @@
   <link rel="stylesheet" href="panel.css" />
 </head>
 <body>
-  <header>
-    <h1>Cinder</h1>
-    <div id="video-title" class="muted">No YouTube video detected.</div>
-  </header>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Cinder</span>
+      </div>
+      <div class="status" id="status-pill" data-state="idle">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="status-label">Idle</span>
+      </div>
+    </header>
 
-  <div id="resume-banner" class="banner hidden">
-    <div class="banner-msg">You have unfinished notes for this video.</div>
-    <div class="banner-actions">
-      <button data-action="resume">Resume</button>
-      <button data-action="finalize">Finalize now</button>
-      <button data-action="discard" class="danger">Discard</button>
+    <section class="empty hidden" id="empty-state">
+      <div class="empty-title">No YouTube video detected</div>
+      <div class="empty-sub">Open a YouTube watch page, then come back here.</div>
+    </section>
+
+    <section class="video-card hidden" id="video-card">
+      <div class="vc-label">Currently watching</div>
+      <div class="vc-title" id="vc-title"></div>
+      <div class="vc-meta" id="vc-meta"></div>
+    </section>
+
+    <div class="banner hidden" id="resume-banner">
+      <div class="banner-text">Unfinished notes from earlier — pick up where you left off.</div>
+      <div class="banner-actions">
+        <button class="btn btn-sm" data-action="resume">Resume</button>
+        <button class="btn btn-sm" data-action="finalize">Save now</button>
+        <button class="btn btn-sm btn-danger" data-action="discard">Discard</button>
+      </div>
     </div>
+
+    <section class="actions hidden" id="actions">
+      <button class="btn btn-primary btn-block" id="primary-btn">Start capture</button>
+      <button class="btn btn-block hidden" id="save-btn">Save to Obsidian</button>
+    </section>
+
+    <section class="notes">
+      <div class="notes-header">
+        <span>Notes</span>
+        <span class="notes-count" id="notes-count">0</span>
+      </div>
+      <div id="chunks" class="chunks">
+        <div class="placeholder">Press Start capture to begin taking notes.</div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <a href="#" id="open-options">Settings</a>
+      <button class="text-btn danger hidden" id="discard-btn">Discard session</button>
+    </footer>
   </div>
-
-  <main id="chunks">
-    <div class="placeholder">Notes will appear here as you watch.</div>
-  </main>
-
-  <footer>
-    <button id="finalize-btn" disabled>Save to Obsidian</button>
-    <button id="discard-btn" class="danger" disabled>Discard</button>
-    <a href="#" id="open-options">Settings</a>
-  </footer>
 
   <script src="panel.js" type="module"></script>
 </body>
