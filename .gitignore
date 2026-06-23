@@ -8,3 +8,8 @@ Thumbs.db
 *.log
 .vscode/
 .idea/
+
+# Local-only tool scaffolding (sharp is installed ad-hoc for icon rendering)
+tools/package.json
+tools/package-lock.json
+tools/_render-wrapper.html
