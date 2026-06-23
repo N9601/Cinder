@@ -49,3 +49,29 @@ Produce a single markdown note with:
 
 Output the markdown note only, with no surrounding commentary or code fences around the whole thing.`;
 }
+
+export function instantPrompt({ title, channel, videoUrl, vaultIndex }) {
+  const indexSample = vaultIndex
+    .slice(0, 500)
+    .map(p => `- ${p.replace(/\.md$/, '')}`)
+    .join('\n');
+
+  return `You are producing a polished Obsidian note from a YouTube video, end-to-end. There are no pre-existing notes — watch the entire video yourself and synthesize.
+
+Video: ${title}
+Channel: ${channel}
+URL: ${videoUrl}
+
+EXISTING VAULT NOTES (only link to titles that appear in this list):
+${indexSample || '(vault index unavailable — do not invent wikilinks)'}
+
+Watch the video and produce a single markdown note:
+- YAML frontmatter with: title, channel, source (the video URL), date \`{{date}}\`, and tags inferred from content.
+- Clear top-level headings reflecting the video's actual structure.
+- Bullet points and short prose. No walls of text. Pull out concrete claims, definitions, examples, and numbers/citations.
+- Mermaid diagrams (flowchart/sequence) where they aid comprehension. Skip them when prose suffices.
+- Wherever a concept matches an existing vault note from the list above, link it as [[Exact Note Title]]. Do NOT invent links to notes that aren't in the list.
+- A "Related" section at the bottom listing the [[wikilinks]] you used.
+
+Output the markdown note only, no surrounding commentary or wrapping code fences.`;
+}

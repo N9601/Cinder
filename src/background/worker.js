@@ -1,5 +1,8 @@
-import { processChunk, processFinal } from '../lib/gemini.js';
+import { processChunk, processFinal, processInstant } from '../lib/gemini.js';
 import { getVaultIndex, saveNote } from '../lib/obsidian.js';
+
+const HISTORY_KEY = 'cinder_history';
+const HISTORY_LIMIT = 100;
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
@@ -46,6 +49,23 @@ async function saveVideo(videoId, data) {
 
 async function clearVideo(videoId) {
   await chrome.storage.local.remove(keyFor(videoId));
+}
+
+async function appendHistory(entry) {
+  const r = await chrome.storage.local.get(HISTORY_KEY);
+  const history = Array.isArray(r[HISTORY_KEY]) ? r[HISTORY_KEY] : [];
+  history.unshift({ ...entry, savedAt: entry.savedAt || Date.now() });
+  if (history.length > HISTORY_LIMIT) history.length = HISTORY_LIMIT;
+  await chrome.storage.local.set({ [HISTORY_KEY]: history });
+}
+
+async function loadHistory() {
+  const r = await chrome.storage.local.get(HISTORY_KEY);
+  return Array.isArray(r[HISTORY_KEY]) ? r[HISTORY_KEY] : [];
+}
+
+async function clearHistory() {
+  await chrome.storage.local.remove(HISTORY_KEY);
 }
 
 async function handleVideoDetected({ videoId, videoUrl, title, channel }) {
@@ -146,20 +166,86 @@ async function handleFinalize({ videoId }) {
     return { error: `Obsidian save failed: ${e.message}` };
   }
 
+  await appendHistory({
+    videoId, title: stored.title, channel: stored.channel,
+    videoUrl: stored.videoUrl, notePath: path, model: finalModel,
+    method: 'capture', chunkCount: stored.chunks.length
+  });
   await clearVideo(videoId);
   return { ok: true, path, model: finalModel };
+}
+
+async function handleInstant({ videoId, videoUrl, title, channel }) {
+  const settings = await getSettings();
+  if (!settings.geminiKey) return { error: 'Gemini API key not set.' };
+  if (!settings.obsidianUrl || !settings.obsidianToken) {
+    return { error: 'Obsidian REST URL and token must be set.' };
+  }
+  if (!videoUrl) return { error: 'No YouTube video URL.' };
+
+  let vaultIndex = [];
+  try {
+    vaultIndex = await getVaultIndex({
+      baseUrl: settings.obsidianUrl,
+      token: settings.obsidianToken
+    });
+  } catch (e) {
+    return { error: `Vault index fetch failed: ${e.message}` };
+  }
+
+  const finalChain = expandChain(
+    settings.geminiFinalModel || settings.geminiModel,
+    DEFAULT_FINAL_CHAIN
+  );
+
+  let markdown, model;
+  try {
+    const result = await processInstant({
+      videoUrl, title, channel, vaultIndex,
+      apiKey: settings.geminiKey,
+      models: finalChain
+    });
+    markdown = result.text;
+    model = result.model;
+  } catch (e) {
+    return { error: `Instant generation failed: ${e.message}` };
+  }
+
+  const safeTitle = (title || 'Untitled').replace(/[\\/:*?"<>|]/g, '-').slice(0, 100).trim() || 'Untitled';
+  const folder = (settings.inboxFolder || 'Inbox').replace(/^\/+|\/+$/g, '');
+  const path = `${folder}/${safeTitle}.md`;
+
+  try {
+    await saveNote({
+      baseUrl: settings.obsidianUrl,
+      token: settings.obsidianToken,
+      path,
+      content: markdown
+    });
+  } catch (e) {
+    return { error: `Obsidian save failed: ${e.message}` };
+  }
+
+  await appendHistory({
+    videoId, title, channel, videoUrl,
+    notePath: path, model, method: 'instant'
+  });
+  return { ok: true, path, model };
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
     try {
       switch (msg.type) {
-        case 'VIDEO_DETECTED': sendResponse(await handleVideoDetected(msg)); break;
-        case 'CHUNK':          sendResponse(await handleChunk(msg)); break;
-        case 'FINALIZE':       sendResponse(await handleFinalize(msg)); break;
-        case 'DISCARD':        await clearVideo(msg.videoId); sendResponse({ ok: true }); break;
-        case 'GET_VIDEO':      sendResponse(await loadVideo(msg.videoId)); break;
-        default:               sendResponse({ error: 'Unknown message type' });
+        case 'VIDEO_DETECTED':  sendResponse(await handleVideoDetected(msg)); break;
+        case 'CHUNK':           sendResponse(await handleChunk(msg)); break;
+        case 'FINALIZE':        sendResponse(await handleFinalize(msg)); break;
+        case 'INSTANT_NOTES':   sendResponse(await handleInstant(msg)); break;
+        case 'DISCARD':         await clearVideo(msg.videoId); sendResponse({ ok: true }); break;
+        case 'GET_VIDEO':       sendResponse(await loadVideo(msg.videoId)); break;
+        case 'GET_HISTORY':     sendResponse(await loadHistory()); break;
+        case 'CLEAR_HISTORY':   await clearHistory(); sendResponse({ ok: true }); break;
+        default:                sendResponse({ error: 'Unknown message type' });
       }
     } catch (err) {
       sendResponse({ error: String(err?.message || err) });

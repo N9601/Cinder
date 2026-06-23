@@ -19,40 +19,65 @@
       </div>
     </header>
 
-    <section class="empty hidden" id="empty-state">
-      <div class="empty-title">No YouTube video detected</div>
-      <div class="empty-sub">Open a YouTube watch page, then come back here.</div>
-    </section>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" role="tab" data-tab="current">Current</button>
+      <button class="tab" role="tab" data-tab="history">
+        History <span class="tab-count" id="history-count">0</span>
+      </button>
+    </nav>
 
-    <section class="video-card hidden" id="video-card">
-      <div class="vc-label">Currently watching</div>
-      <div class="vc-title" id="vc-title"></div>
-      <div class="vc-meta" id="vc-meta"></div>
-    </section>
+    <!-- Current tab -->
+    <div class="tab-panel" data-tab-panel="current">
+      <section class="empty hidden" id="empty-state">
+        <div class="empty-title">No YouTube video detected</div>
+        <div class="empty-sub">Open a YouTube watch page, then come back here.</div>
+      </section>
 
-    <div class="banner hidden" id="resume-banner">
-      <div class="banner-text">Unfinished notes from earlier — pick up where you left off.</div>
-      <div class="banner-actions">
-        <button class="btn btn-sm" data-action="resume">Resume</button>
-        <button class="btn btn-sm" data-action="finalize">Save now</button>
-        <button class="btn btn-sm btn-danger" data-action="discard">Discard</button>
+      <section class="video-card hidden" id="video-card">
+        <div class="vc-label">Currently watching</div>
+        <div class="vc-title" id="vc-title"></div>
+        <div class="vc-meta" id="vc-meta"></div>
+      </section>
+
+      <div class="banner hidden" id="resume-banner">
+        <div class="banner-text">Unfinished notes from earlier — pick up where you left off.</div>
+        <div class="banner-actions">
+          <button class="btn btn-sm" data-action="resume">Resume</button>
+          <button class="btn btn-sm" data-action="finalize">Save now</button>
+          <button class="btn btn-sm btn-danger" data-action="discard">Discard</button>
+        </div>
       </div>
+
+      <section class="actions hidden" id="actions">
+        <button class="btn btn-primary btn-block" id="primary-btn">Start capture</button>
+        <button class="btn btn-block hidden" id="save-btn">Save to Obsidian</button>
+        <button class="btn btn-ghost btn-block" id="instant-btn">Generate instant notes</button>
+        <div class="instant-hint">Skip watching — send the full video to Gemini and drop a note straight into your vault.</div>
+      </section>
+
+      <section class="notes">
+        <div class="notes-header">
+          <span>Notes</span>
+          <span class="notes-count" id="notes-count">0</span>
+        </div>
+        <div id="chunks" class="chunks">
+          <div class="placeholder">Press Start capture to begin taking notes.</div>
+        </div>
+      </section>
     </div>
 
-    <section class="actions hidden" id="actions">
-      <button class="btn btn-primary btn-block" id="primary-btn">Start capture</button>
-      <button class="btn btn-block hidden" id="save-btn">Save to Obsidian</button>
-    </section>
-
-    <section class="notes">
-      <div class="notes-header">
-        <span>Notes</span>
-        <span class="notes-count" id="notes-count">0</span>
-      </div>
-      <div id="chunks" class="chunks">
-        <div class="placeholder">Press Start capture to begin taking notes.</div>
-      </div>
-    </section>
+    <!-- History tab -->
+    <div class="tab-panel hidden" data-tab-panel="history">
+      <section class="history">
+        <div class="history-header">
+          <span>Saved notes</span>
+          <button class="text-btn danger" id="clear-history-btn" title="Clear all history">Clear all</button>
+        </div>
+        <div id="history-list" class="history-list">
+          <div class="placeholder">No saved notes yet.</div>
+        </div>
+      </section>
+    </div>
 
     <footer class="footer">
       <a href="#" id="open-options">Settings</a>

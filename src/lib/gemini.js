@@ -3,7 +3,7 @@
 // audio + visuals (no transcription step needed).
 // Docs: https://ai.google.dev/gemini-api/docs/video-understanding
 
-import { chunkPrompt, finalPrompt } from './prompts.js';
+import { chunkPrompt, finalPrompt, instantPrompt } from './prompts.js';
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const RETRYABLE_STATUSES = new Set([429, 503]);
@@ -80,6 +80,15 @@ export async function processChunk({ videoUrl, title, startSec, endSec, apiKey, 
 export async function processFinal({ chunks, title, channel, videoUrl, vaultIndex, apiKey, models }) {
   const parts = [
     { text: finalPrompt({ chunks, title, channel, videoUrl, vaultIndex }) }
+  ];
+  return callWithFallback({ models, apiKey, parts, temperature: 0.5 });
+}
+
+export async function processInstant({ videoUrl, title, channel, vaultIndex, apiKey, models }) {
+  // No video_metadata clip range — Gemini processes the whole video.
+  const parts = [
+    { file_data: { file_uri: videoUrl, mime_type: 'video/youtube' } },
+    { text: instantPrompt({ title, channel, videoUrl, vaultIndex }) }
   ];
   return callWithFallback({ models, apiKey, parts, temperature: 0.5 });
 }
