@@ -63,7 +63,7 @@
     }
     label:first-of-type { margin-top: 0; }
 
-    input[type="text"], input[type="password"], input[type="number"] {
+    input[type="text"], input[type="password"], input[type="number"], select {
       width: 100%;
       padding: 9px 11px;
       font: inherit;
@@ -75,12 +75,23 @@
       color: var(--text);
       transition: border-color 0.15s ease, background 0.15s ease;
     }
-    input:focus {
+    input:focus, select:focus {
       outline: none;
       border-color: var(--primary);
       background: #2f2f2f;
     }
     input::placeholder { color: #5a5a5a; }
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M2 4 L6 8 L10 4' stroke='%23828282' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 12px;
+      padding-right: 32px;
+      cursor: pointer;
+    }
+    select option { background: var(--panel-2); color: var(--text); }
 
     .row { display: flex; gap: 14px; }
     .row > div { flex: 1; }
@@ -143,17 +154,25 @@
         <div class="hint">Get one from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</div>
       </label>
 
-      <label>Chunk model chain
-        <input type="text" id="geminiModel" placeholder="gemini-2.5-flash, gemini-2.5-flash-lite" autocomplete="off" />
-        <div class="hint">Runs on every chunk during playback. Comma-separated fallback list — if the first hits a rate limit or quota, Cinder tries the next.</div>
+      <label>Chunk model
+        <select id="geminiModel">
+          <option value="gemini-2.5-flash">Gemini 2.5 Flash — fast, default</option>
+          <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite — cheapest</option>
+          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+          <option value="gemini-3-pro">Gemini 3 Pro</option>
+        </select>
+        <div class="hint">Runs on every chunk during playback. Cinder auto-falls-back to a cheaper model if this one hits a rate limit.</div>
       </label>
 
-      <label>Final model chain
-        <input type="text" id="geminiFinalModel" placeholder="gemini-3-pro, gemini-2.5-pro, gemini-2.5-flash" autocomplete="off" />
-        <div class="hint">One call when you save. Put your strongest model first. Leave blank to reuse the chunk chain.</div>
+      <label>Final model
+        <select id="geminiFinalModel">
+          <option value="gemini-3-pro">Gemini 3 Pro — best, default</option>
+          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+          <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
+        </select>
+        <div class="hint">One call when you save the note. Auto-falls-back to the next-best model on quota errors.</div>
       </label>
-
-      <div class="hint" style="margin-top: 12px;">Any Gemini model ID your key has access to works. See <a href="https://ai.google.dev/gemini-api/docs/models" target="_blank">Gemini docs</a> for the current list.</div>
     </section>
 
     <section class="section">

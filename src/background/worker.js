@@ -8,18 +8,30 @@ chrome.runtime.onInstalled.addListener(() => {
 const STORAGE_PREFIX = 'cinder_video_';
 const keyFor = (videoId) => `${STORAGE_PREFIX}${videoId}`;
 
-const DEFAULT_CHUNK_CHAIN = ['gemini-2.5-flash'];
-const DEFAULT_FINAL_CHAIN = ['gemini-2.5-pro', 'gemini-2.5-flash'];
+// When the user picks a single model in the options dropdown, expand it to
+// a sensible fallback cascade so quota/rate-limit errors don't block the run.
+const FALLBACK_CHAINS = {
+  'gemini-3-pro':          ['gemini-3-pro', 'gemini-2.5-pro', 'gemini-2.5-flash'],
+  'gemini-2.5-pro':        ['gemini-2.5-pro', 'gemini-2.5-flash'],
+  'gemini-2.5-flash':      ['gemini-2.5-flash', 'gemini-2.5-flash-lite'],
+  'gemini-2.5-flash-lite': ['gemini-2.5-flash-lite']
+};
+const DEFAULT_CHUNK_CHAIN = FALLBACK_CHAINS['gemini-2.5-flash'];
+const DEFAULT_FINAL_CHAIN = FALLBACK_CHAINS['gemini-3-pro'];
 
 async function getSettings() {
   const { settings = {} } = await chrome.storage.local.get('settings');
   return settings;
 }
 
-function parseChain(raw, fallback) {
-  if (!raw) return fallback;
-  const arr = String(raw).split(',').map(s => s.trim()).filter(Boolean);
-  return arr.length ? arr : fallback;
+function expandChain(primary, defaultChain) {
+  if (!primary) return defaultChain;
+  // If the value is already comma-separated (legacy format), honor it as-is.
+  if (typeof primary === 'string' && primary.includes(',')) {
+    const arr = primary.split(',').map(s => s.trim()).filter(Boolean);
+    return arr.length ? arr : defaultChain;
+  }
+  return FALLBACK_CHAINS[primary] || [primary, ...defaultChain.filter(m => m !== primary)];
 }
 
 async function loadVideo(videoId) {
@@ -57,7 +69,7 @@ async function handleChunk({ videoId, videoUrl, title, channel, startSec, endSec
   if (!settings.geminiKey) {
     return { error: 'Gemini API key not set. Open Cinder options.' };
   }
-  const models = parseChain(settings.geminiModel, DEFAULT_CHUNK_CHAIN);
+  const models = expandChain(settings.geminiModel, DEFAULT_CHUNK_CHAIN);
   const { text, model } = await processChunk({
     videoUrl, title, startSec, endSec,
     apiKey: settings.geminiKey,
@@ -97,9 +109,9 @@ async function handleFinalize({ videoId }) {
     return { error: `Vault index fetch failed: ${e.message}` };
   }
 
-  const finalChain = parseChain(
-    settings.geminiFinalModel,
-    parseChain(settings.geminiModel, DEFAULT_FINAL_CHAIN)
+  const finalChain = expandChain(
+    settings.geminiFinalModel || settings.geminiModel,
+    DEFAULT_FINAL_CHAIN
   );
 
   let finalMarkdown, finalModel;
