@@ -11,6 +11,13 @@
 (function () {
   if (window.__cinderInjected) return;
   window.__cinderInjected = true;
+  console.log('[Cinder] content script injected on', location.href);
+
+  // If the extension is reloaded while this tab is open, our chrome.runtime
+  // handle becomes invalid. Stop ticking instead of throwing every 2 seconds.
+  function isContextDead() {
+    return !chrome.runtime?.id;
+  }
 
   const STORAGE_PREFIX = 'cinder_video_';
   const DEFAULT_CHUNK_MIN = 5;
@@ -112,6 +119,7 @@
   }
 
   function tick() {
+    if (isContextDead()) return;
     const id = videoIdFromUrl(location.href);
     if (id !== currentVideoId) { onVideoChanged(id); return; }
     if (!id || !captureActive) return;
