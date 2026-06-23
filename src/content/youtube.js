@@ -1,29 +1,47 @@
-// Cinder content script: detects YouTube watch pages, tracks watched-time
-// (forward play only — pauses and scrubs don't accumulate), and fires chunk
-// events to the background worker at the configured interval.
+// Cinder content script.
+//
+// Two modes, both running continuously:
+// - Passive detection: whenever a YouTube watch URL is loaded, report the
+//   videoId + metadata to the background worker so the side panel knows what
+//   the user is on. This costs nothing — no API calls.
+// - Active capture: only runs when this video's `captureActive` flag is set in
+//   chrome.storage.local (the side panel writes it). When active, watched-time
+//   (forward play only) is tracked and chunks fire to the worker every N min.
 
 (function () {
   if (window.__cinderInjected) return;
   window.__cinderInjected = true;
 
+  const STORAGE_PREFIX = 'cinder_video_';
   const DEFAULT_CHUNK_MIN = 5;
+
   let chunkLengthSec = DEFAULT_CHUNK_MIN * 60;
+  let currentVideoId = null;
+  let captureActive = false;
+
+  // Tracker state — only meaningful when captureActive is true.
+  let lastWallMs = null;
+  let lastPlayerSec = null;
+  let watchedAccumSec = 0;
+  let chunkStartSec = 0;
 
   chrome.storage.local.get('settings').then(({ settings = {} }) => {
     if (settings.chunkMinutes) chunkLengthSec = Number(settings.chunkMinutes) * 60;
   });
 
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.settings?.newValue?.chunkMinutes) {
+    if (area !== 'local') return;
+    if (changes.settings?.newValue?.chunkMinutes) {
       chunkLengthSec = Number(changes.settings.newValue.chunkMinutes) * 60;
     }
+    if (currentVideoId) {
+      const key = STORAGE_PREFIX + currentVideoId;
+      if (changes[key]) {
+        const newActive = !!changes[key].newValue?.captureActive;
+        if (newActive !== captureActive) onCaptureToggle(newActive);
+      }
+    }
   });
-
-  let currentVideoId = null;
-  let lastWallMs = null;
-  let lastPlayerSec = null;
-  let watchedAccumSec = 0;
-  let chunkStartSec = 0;
 
   function videoIdFromUrl(href) {
     try { return new URL(href).searchParams.get('v'); } catch { return null; }
@@ -51,19 +69,43 @@
     chunkStartSec = playerSec ?? 0;
   }
 
-  function startTrackingForVideo(videoId) {
-    currentVideoId = videoId;
+  function onCaptureToggle(active) {
+    captureActive = active;
+    if (active) {
+      resetTracker(getPlayer()?.currentTime ?? 0);
+    } else {
+      flushPartial();
+      resetTracker(0);
+    }
+  }
+
+  async function reportVideo(videoId) {
+    const { title, channel } = pageMeta();
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    chrome.runtime.sendMessage({
+      type: 'VIDEO_DETECTED',
+      videoId, videoUrl, title, channel
+    }).catch(() => {});
+    // Sync our local captureActive with whatever the worker just wrote.
+    const r = await chrome.storage.local.get(STORAGE_PREFIX + videoId);
+    captureActive = !!r[STORAGE_PREFIX + videoId]?.captureActive;
+  }
+
+  async function onVideoChanged(newId) {
+    currentVideoId = newId;
     resetTracker(0);
+    if (newId) await reportVideo(newId);
+    else captureActive = false;
   }
 
   function emitChunk(t0, t1) {
+    if (!currentVideoId) return;
     const { title, channel } = pageMeta();
     chrome.runtime.sendMessage({
       type: 'CHUNK',
       videoId: currentVideoId,
       videoUrl: `https://www.youtube.com/watch?v=${currentVideoId}`,
-      title,
-      channel,
+      title, channel,
       startSec: Math.max(0, Math.floor(t0)),
       endSec: Math.max(0, Math.floor(t1))
     }).catch(() => {});
@@ -71,8 +113,8 @@
 
   function tick() {
     const id = videoIdFromUrl(location.href);
-    if (!id) { currentVideoId = null; return; }
-    if (id !== currentVideoId) startTrackingForVideo(id);
+    if (id !== currentVideoId) { onVideoChanged(id); return; }
+    if (!id || !captureActive) return;
 
     const player = getPlayer();
     if (!player || player.paused || player.ended) {
@@ -91,7 +133,6 @@
       if (playerDelta > 0 && playerDelta < wallDelta * 4 + 0.5) {
         watchedAccumSec += playerDelta;
       } else {
-        // Scrub or seek: re-baseline the chunk start without emitting.
         chunkStartSec = playerSec;
         watchedAccumSec = 0;
       }
@@ -111,11 +152,8 @@
     }
   }
 
-  setInterval(tick, 2000);
-
-  // Flush leftover progress as a final partial chunk when the user leaves.
   function flushPartial() {
-    if (watchedAccumSec > 30 && currentVideoId) {
+    if (captureActive && watchedAccumSec > 30 && currentVideoId) {
       const player = getPlayer();
       const t1 = player ? player.currentTime : chunkStartSec + watchedAccumSec;
       emitChunk(chunkStartSec, t1);
@@ -124,6 +162,8 @@
     }
   }
 
+  setInterval(tick, 2000);
+
   window.addEventListener('beforeunload', flushPartial);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') flushPartial();
@@ -131,4 +171,8 @@
 
   const player = getPlayer();
   if (player) player.addEventListener('ended', flushPartial);
+
+  // Initial run — detect right away rather than waiting 2s.
+  const initialId = videoIdFromUrl(location.href);
+  if (initialId) onVideoChanged(initialId);
 })();
