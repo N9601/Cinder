@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Cinder</title>
+  <link rel="stylesheet" href="panel.css" />
+</head>
+<body>
+  <header>
+    <h1>Cinder</h1>
+    <div id="video-title" class="muted">No YouTube video detected.</div>
+  </header>
+
+  <div id="resume-banner" class="banner hidden">
+    <div class="banner-msg">You have unfinished notes for this video.</div>
+    <div class="banner-actions">
+      <button data-action="resume">Resume</button>
+      <button data-action="finalize">Finalize now</button>
+      <button data-action="discard" class="danger">Discard</button>
+    </div>
+  </div>
+
+  <main id="chunks">
+    <div class="placeholder">Notes will appear here as you watch.</div>
+  </main>
+
+  <footer>
+    <button id="finalize-btn" disabled>Save to Obsidian</button>
+    <button id="discard-btn" class="danger" disabled>Discard</button>
+    <a href="#" id="open-options">Settings</a>
+  </footer>
+
+  <script src="panel.js" type="module"></script>
+</body>
+</html>
