@@ -4,96 +4,189 @@
   <meta charset="utf-8" />
   <title>Cinder Settings</title>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      max-width: 560px;
-      margin: 32px auto;
-      padding: 0 16px;
-      color: #1a1a1a;
+    :root {
+      --bg: #1a1a1a;
+      --panel: #232323;
+      --panel-2: #2b2b2b;
+      --border: #2e2e2e;
+      --border-2: #3a3a3a;
+      --text: #e8e8e8;
+      --muted: #828282;
+      --primary: #ff7a45;
+      --primary-hover: #ff8b5c;
+      --primary-press: #1a0d05;
+      --success: #6fcf85;
+      --link: #ffaa7d;
     }
-    h1 { font-size: 22px; margin-bottom: 4px; }
-    .subtitle { color: #666; margin-bottom: 24px; font-size: 13px; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      padding: 40px 16px 80px;
+    }
+    .wrap { max-width: 620px; margin: 0 auto; }
+
+    header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .brand-mark {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffb27a, var(--primary) 55%, #b03a14 100%);
+      box-shadow: 0 0 14px rgba(255,122,69,0.45);
+    }
+    h1 { font-size: 22px; margin: 0; font-weight: 600; letter-spacing: 0.3px; }
+    .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+    .section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px 22px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
     label {
       display: block;
-      margin-top: 16px;
+      margin-top: 14px;
       font-size: 13px;
       font-weight: 500;
-      color: #333;
+      color: var(--text);
     }
-    input, select {
+    label:first-of-type { margin-top: 0; }
+
+    input[type="text"], input[type="password"], input[type="number"] {
       width: 100%;
-      padding: 8px 10px;
+      padding: 9px 11px;
       font: inherit;
-      margin-top: 4px;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-      background: #fff;
+      font-size: 13px;
+      margin-top: 6px;
+      border: 1px solid var(--border-2);
+      border-radius: 6px;
+      background: var(--panel-2);
+      color: var(--text);
+      transition: border-color 0.15s ease, background 0.15s ease;
     }
-    input:focus, select:focus { outline: 2px solid #6080c0; outline-offset: -1px; }
-    .row { display: flex; gap: 12px; }
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #2f2f2f;
+    }
+    input::placeholder { color: #5a5a5a; }
+
+    .row { display: flex; gap: 14px; }
     .row > div { flex: 1; }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+    .hint a { color: var(--link); text-decoration: none; }
+    .hint a:hover { text-decoration: underline; }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
     button {
-      margin-top: 22px;
-      padding: 8px 16px;
+      padding: 10px 22px;
       cursor: pointer;
       font: inherit;
-      border: 1px solid #888;
-      border-radius: 4px;
-      background: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--primary);
+      border-radius: 6px;
+      background: var(--primary);
+      color: var(--primary-press);
+      transition: background 0.15s ease, border-color 0.15s ease;
     }
-    button:hover { background: #f0f0f0; }
-    .hint { font-size: 12px; color: #666; margin-top: 4px; }
-    .hint a { color: #4060a0; }
-    .status { margin-top: 12px; font-size: 13px; color: #060; min-height: 1em; }
+    button:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .status {
+      font-size: 13px;
+      color: var(--success);
+      min-height: 1em;
+    }
   </style>
 </head>
 <body>
-  <h1>Cinder Settings</h1>
-  <div class="subtitle">YouTube → Obsidian notes via Gemini.</div>
+  <div class="wrap">
+    <header>
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div>
+        <h1>Cinder Settings</h1>
+        <div class="subtitle">YouTube → Obsidian notes via Gemini.</div>
+      </div>
+    </header>
 
-  <label>Gemini API Key
-    <input type="password" id="geminiKey" autocomplete="off" />
-    <div class="hint">Get one from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</div>
-  </label>
+    <section class="section">
+      <div class="section-title">Gemini</div>
 
-  <label>Chunk model chain
-    <input type="text" id="geminiModel" placeholder="gemini-2.5-flash, gemini-2.5-flash-lite" autocomplete="off" />
-    <div class="hint">Runs on every chunk during playback. Comma-separated fallback list — if the first hits a rate limit, Cinder tries the next.</div>
-  </label>
+      <label>API key
+        <input type="password" id="geminiKey" autocomplete="off" placeholder="AIza…" />
+        <div class="hint">Get one from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</div>
+      </label>
 
-  <label>Final model chain
-    <input type="text" id="geminiFinalModel" placeholder="gemini-3-pro, gemini-2.5-pro, gemini-2.5-flash" autocomplete="off" />
-    <div class="hint">One call when you save. Put your strongest model first; fallbacks kick in on quota errors. Leave blank to reuse the chunk chain.</div>
-  </label>
+      <label>Chunk model chain
+        <input type="text" id="geminiModel" placeholder="gemini-2.5-flash, gemini-2.5-flash-lite" autocomplete="off" />
+        <div class="hint">Runs on every chunk during playback. Comma-separated fallback list — if the first hits a rate limit or quota, Cinder tries the next.</div>
+      </label>
 
-  <div class="hint" style="margin-top: 6px;">Any Gemini model ID your key has access to works. See <a href="https://ai.google.dev/gemini-api/docs/models" target="_blank">Gemini docs</a> for the current list.</div>
+      <label>Final model chain
+        <input type="text" id="geminiFinalModel" placeholder="gemini-3-pro, gemini-2.5-pro, gemini-2.5-flash" autocomplete="off" />
+        <div class="hint">One call when you save. Put your strongest model first. Leave blank to reuse the chunk chain.</div>
+      </label>
 
-  <label>Obsidian Local REST URL
-    <input type="text" id="obsidianUrl" placeholder="https://127.0.0.1:27124" />
-    <div class="hint">Install the <a href="https://github.com/coddingtonbear/obsidian-local-rest-api" target="_blank">Local REST API</a> community plugin in Obsidian.</div>
-  </label>
+      <div class="hint" style="margin-top: 12px;">Any Gemini model ID your key has access to works. See <a href="https://ai.google.dev/gemini-api/docs/models" target="_blank">Gemini docs</a> for the current list.</div>
+    </section>
 
-  <label>Obsidian API Token
-    <input type="password" id="obsidianToken" autocomplete="off" />
-  </label>
+    <section class="section">
+      <div class="section-title">Obsidian Vault</div>
 
-  <div class="row">
-    <div>
+      <label>Local REST URL
+        <input type="text" id="obsidianUrl" placeholder="http://127.0.0.1:27123" />
+        <div class="hint">Install the <a href="https://github.com/coddingtonbear/obsidian-local-rest-api" target="_blank">Local REST API</a> community plugin in Obsidian. HTTP on 27123 avoids self-signed cert issues.</div>
+      </label>
+
+      <label>API token
+        <input type="password" id="obsidianToken" autocomplete="off" placeholder="Bearer token from the plugin settings" />
+      </label>
+
       <label>Inbox folder
         <input type="text" id="inboxFolder" placeholder="Inbox" />
-        <div class="hint">Where new notes land.</div>
+        <div class="hint">Where new notes land. The folder must already exist in your vault.</div>
       </label>
-    </div>
-    <div>
-      <label>Chunk interval (min)
+    </section>
+
+    <section class="section">
+      <div class="section-title">Behavior</div>
+
+      <label>Chunk interval (minutes)
         <input type="number" id="chunkMinutes" min="1" max="30" value="5" />
-        <div class="hint">Watched-time per chunk.</div>
+        <div class="hint">Watched-time per chunk. Lower = more frequent API calls but faster feedback.</div>
       </label>
+    </section>
+
+    <div class="actions">
+      <button id="save">Save settings</button>
+      <div class="status" id="status"></div>
     </div>
   </div>
-
-  <button id="save">Save</button>
-  <div class="status" id="status"></div>
 
   <script src="options.js"></script>
 </body>
