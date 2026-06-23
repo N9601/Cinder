@@ -50,11 +50,10 @@ body {
   gap: 9px;
 }
 .brand-mark {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #ffb27a, var(--primary) 55%, #b03a14 100%);
-  box-shadow: 0 0 10px rgba(255,122,69,0.45);
+  width: 22px;
+  height: 22px;
+  display: block;
+  filter: drop-shadow(0 0 5px rgba(160, 152, 181, 0.25));
 }
 .brand-name {
   font-weight: 600;

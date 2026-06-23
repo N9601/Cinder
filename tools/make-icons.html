@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Cinder — icon export</title>
+  <style>
+    :root {
+      --bg: #1a1a1a; --panel: #232323; --text: #e8e8e8; --muted: #828282;
+      --primary: #ff7a45; --primary-press: #1a0d05; --border: #2e2e2e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg); color: var(--text);
+      max-width: 640px; margin: 0 auto; padding: 40px 20px;
+      min-height: 100vh;
+    }
+    h1 { font-weight: 600; margin: 0 0 6px; }
+    .sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+    button {
+      padding: 10px 22px; background: var(--primary); border: none;
+      color: var(--primary-press); border-radius: 6px; font-weight: 500;
+      cursor: pointer; font-size: 14px;
+    }
+    button:hover { filter: brightness(1.08); }
+    .row { display: flex; gap: 16px; align-items: flex-end; margin-top: 28px; flex-wrap: wrap; }
+    .tile {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px; text-align: center;
+    }
+    .tile canvas { display: block; image-rendering: pixelated; background: transparent; }
+    .tile span { display: block; color: var(--muted); font-size: 11px; margin-top: 8px; }
+    code { background: var(--panel); padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Cinder icon export</h1>
+  <div class="sub">Renders <code>icon16.png</code>, <code>icon48.png</code>, and <code>icon128.png</code> from the brand SVG. Click the button below, then move the downloaded files into the extension's <code>icons/</code> folder.</div>
+
+  <button id="export">Render &amp; download all three</button>
+  <div class="row" id="preview"></div>
+
+  <script>
+    const SVG = `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" fill="none" aria-label="Cinder">
+  <g stroke="#a098b5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 92 36 A 40 40 0 1 0 92 92" stroke-width="3.5" />
+    <path d="M 86 42 A 32 32 0 1 0 86 86" stroke-width="3.5" />
+    <path d="M 64 40 L 76 52 L 76 76 L 64 88 L 52 76 L 52 52 Z" stroke-width="2.2" />
+    <path d="M 52 52 L 64 62 L 76 52" stroke-width="1.6" />
+    <line x1="64" y1="62" x2="64" y2="88" stroke-width="1.6" />
+  </g>
+</svg>`;
+    const SIZES = [16, 48, 128];
+
+    async function loadImage(svg) {
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = (e) => reject(e);
+        i.src = url;
+      });
+      URL.revokeObjectURL(url);
+      return img;
+    }
+
+    function downloadCanvas(canvas, name) {
+      canvas.toBlob((blob) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        document.body.append(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      }, 'image/png');
+    }
+
+    document.getElementById('export').addEventListener('click', async () => {
+      const preview = document.getElementById('preview');
+      preview.innerHTML = '';
+      const img = await loadImage(SVG);
+      for (const size of SIZES) {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, size, size);
+
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        const display = document.createElement('canvas');
+        display.width = display.height = Math.max(size, 64);
+        const dctx = display.getContext('2d');
+        dctx.imageSmoothingEnabled = size >= 48;
+        dctx.drawImage(canvas, 0, 0, display.width, display.height);
+        tile.append(display);
+        const label = document.createElement('span');
+        label.textContent = `icon${size}.png`;
+        tile.append(label);
+        preview.append(tile);
+
+        downloadCanvas(canvas, `icon${size}.png`);
+      }
+    });
+  </script>
+</body>
+</html>

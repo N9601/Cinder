@@ -31,9 +31,8 @@
 
     header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
     .brand-mark {
-      width: 22px; height: 22px; border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #ffb27a, var(--primary) 55%, #b03a14 100%);
-      box-shadow: 0 0 14px rgba(255,122,69,0.45);
+      width: 32px; height: 32px; display: block;
+      filter: drop-shadow(0 0 8px rgba(160, 152, 181, 0.3));
     }
     h1 { font-size: 22px; margin: 0; font-weight: 600; letter-spacing: 0.3px; }
     .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
@@ -127,7 +126,7 @@
 <body>
   <div class="wrap">
     <header>
-      <div class="brand-mark" aria-hidden="true"></div>
+      <img class="brand-mark" src="../../icons/logo.svg" alt="" aria-hidden="true" />
       <div>
         <h1>Cinder Settings</h1>
         <div class="subtitle">YouTube → Obsidian notes via Gemini.</div>

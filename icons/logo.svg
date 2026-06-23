@@ -1,0 +1,17 @@
+<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" fill="none" aria-label="Cinder">
+  <g stroke="#a098b5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer crescent forming the C -->
+    <path d="M 92 36 A 40 40 0 1 0 92 92" stroke-width="3.5" />
+    <!-- Inner parallel crescent -->
+    <path d="M 86 42 A 32 32 0 1 0 86 86" stroke-width="3.5" />
+
+    <!-- Crystal silhouette (hexagonal kite) -->
+    <path d="M 64 40 L 76 52 L 76 76 L 64 88 L 52 76 L 52 52 Z" stroke-width="2.2" />
+
+    <!-- Crystal top facets -->
+    <path d="M 52 52 L 64 62 L 76 52" stroke-width="1.6" />
+
+    <!-- Crystal central axis (lower half) -->
+    <line x1="64" y1="62" x2="64" y2="88" stroke-width="1.6" />
+  </g>
+</svg>
