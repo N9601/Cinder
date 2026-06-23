@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Cinder",
+  "version": "0.1.0",
+  "description": "Turn YouTube videos into linked Obsidian notes via Gemini.",
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*.youtube.com/*",
+    "http://127.0.0.1/*",
+    "https://127.0.0.1/*",
+    "https://generativelanguage.googleapis.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background/worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/watch*"],
+      "js": ["src/content/youtube.js"]
+    }
+  ],
+  "side_panel": {
+    "default_path": "src/sidepanel/panel.html"
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_title": "Open Cinder"
+  }
+}
