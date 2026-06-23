@@ -3,12 +3,18 @@
 // Default base URLs: https://127.0.0.1:27124 (HTTPS, self-signed)
 //                    http://127.0.0.1:27123  (HTTP, if enabled in plugin settings)
 
+function cleanToken(raw) {
+  // Tolerate the user pasting the full Authorization header value
+  // ("Bearer xyz…") or accidentally including quotes/whitespace.
+  return String(raw || '').trim().replace(/^["']|["']$/g, '').replace(/^Bearer\s+/i, '');
+}
+
 async function obsFetch(baseUrl, token, path, opts = {}) {
   const url = `${baseUrl.replace(/\/$/, '')}${path}`;
   const res = await fetch(url, {
     ...opts,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${cleanToken(token)}`,
       ...(opts.headers || {})
     }
   });

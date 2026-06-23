@@ -184,7 +184,8 @@
       </label>
 
       <label>API token
-        <input type="password" id="obsidianToken" autocomplete="off" placeholder="Bearer token from the plugin settings" />
+        <input type="password" id="obsidianToken" autocomplete="off" placeholder="Just the long hex string, no 'Bearer ' prefix" />
+        <div class="hint">The Obsidian plugin settings page shows the full header value (e.g. <code>Bearer b8a834…</code>). Paste only the part <em>after</em> "Bearer ". Cinder strips the prefix if you paste the whole thing anyway.</div>
       </label>
 
       <label>Inbox folder
